@@ -7,9 +7,14 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Set;
 
 import javax.swing.JFrame;
 import javax.swing.JTextArea;
+
+import org.semanticweb.owlapi.model.OWLClass;
+
 import javax.swing.JScrollPane;;
 
 public class Server {
@@ -89,16 +94,30 @@ public class Server {
 		// remove stop words
 		// get stems
 		UserQueryProcessor pocessor = new UserQueryProcessor();
-		String []words =  pocessor.processQuery(userQuery,txtAlors);
+		pocessor.processQuery(userQuery,txtAlors);
 		
-		return java.util.Arrays.toString(words);
+		String [] Qwords = pocessor.getUserQueryWords();
+		String [] Qstems = pocessor.getUserQueryStems();
+		String [] Qentities = pocessor.getEntities();
+		
+		
 		//for(int i=0;i<words.length;i++)
 			//txtSPARQLQuery.setText(txtSPARQLQuery.getText()+" "+words[i]);
-		//get classes and properties from the ontology
 		
+		//get classes and properties from the ontology
+		OntologyReader ontReader = new OntologyReader();
+		
+		ontReader.readOntology();
 		//matching process
+		ontReader.match(Qwords,Qstems,Qentities);
+		
+		//User Feedback
+		
 		
 		//build SPARQL query
+		
+		
+		return java.util.Arrays.toString(Qentities);
 		
 	}
 

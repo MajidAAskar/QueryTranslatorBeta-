@@ -21,6 +21,22 @@ public class UserQueryProcessor
 	private String[] userQueryWords;
 	private String[] userQueryStems;
 	private String[] userQueryWordsRelations;
+	private String[] entities;
+	//*****************************************************************************************
+	public String[] getUserQueryWords()
+	{
+		return userQueryWords;
+	}
+	//*****************************************************************************************
+	public String[] getUserQueryStems()
+	{
+		return userQueryStems;
+	}
+	//*****************************************************************************************
+	public String[] getEntities()
+	{
+		return entities;
+	}
 	//*****************************************************************************************
 	public  List<CoreLabel> parseQuery( String userQuery,JTextArea jta) 
 	{
@@ -119,7 +135,7 @@ public class UserQueryProcessor
 	//get words and relations using stanford parser
 	// remove stop words
 	// get stems
-	public String[] processQuery(String query,JTextArea jta) 
+	public void processQuery(String query,JTextArea jta) 
 	{
 		//parse the query
 		List<CoreLabel> words = parseQuery( query,jta);
@@ -158,7 +174,7 @@ public class UserQueryProcessor
 		jta.setText(jta.getText()+"\nName Entity Recognition");
 
 		EntityRecognizer eRecognizer = new EntityRecognizer();
-		String[] entities = eRecognizer.getEntities(userQueryWords);
+		entities = eRecognizer.getEntities(userQueryWords);
 
 		//print the tokens after getting entities
 		for(int i=0;i<entities.length;i++)
@@ -166,7 +182,7 @@ public class UserQueryProcessor
 			jta.setText(jta.getText()+"\nEntity   "+entities[i]);
 		}
 
-		return entities;
+		//return entities;
 		//get stems
 	}
 }
