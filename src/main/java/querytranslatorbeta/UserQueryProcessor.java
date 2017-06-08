@@ -103,6 +103,7 @@ public class UserQueryProcessor
 		userQueryStems = new String[words.size()];
 		//use rawWords2
 
+		//do stemming here
 		EnglishStemmer stemmer = new EnglishStemmer();
 
 		for(int i=0;i<words.size();i++)
@@ -113,10 +114,10 @@ public class UserQueryProcessor
 			stemmer.setCurrent(userQueryWords[i]);
 			stemmer.stem();
 			userQueryStems[i] = stemmer.getCurrent();
-			//System.out.println("stem "+stemmer.getCurrent());
+			System.out.println("stem "+stemmer.getCurrent());
 		}
 
-		//do stemming here
+
 
 		EntityRecognizer eRecognizer = new EntityRecognizer();
 		String[] entities = eRecognizer.getEntities(userQueryWords);
@@ -157,6 +158,10 @@ public class UserQueryProcessor
 		userQueryStems = new String[words.size()];
 		//use rawWords2
 
+		//print the tokens after stemming
+		jta.setText(jta.getText()+"\n----------------------------------------");
+		jta.setText(jta.getText()+"\ntokens after stemming");
+		
 		EnglishStemmer stemmer = new EnglishStemmer();
 
 		for(int i=0;i<words.size();i++)
@@ -167,6 +172,7 @@ public class UserQueryProcessor
 			stemmer.setCurrent(userQueryWords[i]);
 			stemmer.stem();
 			userQueryStems[i] = stemmer.getCurrent();
+			jta.setText(jta.getText()+"\nStem   "+userQueryStems[i]);
 			//System.out.println("stem "+stemmer.getCurrent());
 		}
 

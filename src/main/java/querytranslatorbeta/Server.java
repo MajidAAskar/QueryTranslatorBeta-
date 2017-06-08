@@ -111,6 +111,9 @@ public class Server {
 		//matching process
 		ontReader.match(Qwords,Qstems,Qentities);
 		
+		txtAlors.setText(txtAlors.getText()+"\n----------------------------------------");
+		txtAlors.setText(txtAlors.getText()+"\nMatched Items");
+		txtAlors.setText(txtAlors.getText()+ontReader.getMatchedItems());
 		//User Feedback
 		
 		
