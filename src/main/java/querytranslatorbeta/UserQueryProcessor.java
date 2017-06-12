@@ -187,8 +187,5 @@ public class UserQueryProcessor
 		{
 			jta.setText(jta.getText()+"\nEntity   "+entities[i]);
 		}
-
-		//return entities;
-		//get stems
 	}
 }

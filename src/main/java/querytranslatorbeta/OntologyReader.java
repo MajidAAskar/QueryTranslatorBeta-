@@ -16,13 +16,15 @@ import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLObjectPropertyDomainAxiom;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.tartarus.snowball.ext.EnglishStemmer;
 
 public class OntologyReader 
 {
 	private static Set<OWLClass> classes;
 	private static Set<OWLObjectProperty> objectProp;
 	private static Set<OWLDataProperty> dataProp;
-	private static String matchedItems;
+	private static ArrayList<String> matchedItems;
+	private static String matchedItemsString;
 
 
 	public static void main(String []args) 
@@ -107,103 +109,220 @@ public class OntologyReader
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 	public static void match(String [] queryWords,String [] queryStems,String [] queryEntities)
 	{
-		matchedItems="";
+		matchedItems= new ArrayList<String>();
+		matchedItemsString="";
 		//1-normal match
 		//2-stem match
 		//3-stem to stem match
 
 		//match the query words with the classes
-		matchedItems+="query words with the ontology classes\n";
-		int[] qWordClass = matchClasses(queryWords);
+		matchedItemsString+="* Query words with the ontology classes\n";
+		matchClasses(queryWords);
 		//match the query stems with the classes
-		matchedItems+="query stems with the ontology classes\n";
-		int[] qStemClass = matchClasses(queryStems);
+		matchedItemsString+="* Query stems with the ontology classes\n";
+		matchClasses(queryStems);
 		//match the query entities with the classes
-		matchedItems+="query entities with the ontology classes\n";
-		int[] qEntityClass = matchClasses(queryEntities);
+		matchedItemsString+="* Query entities with the ontology classes\n";
+		matchClasses(queryEntities);
 
 
 
 		//match the query words with the object Properties
-		matchedItems+="query words with the ontology object Properties\n";
-		int[] qWordOProp = matchobjectProperties(queryWords);
+		matchedItemsString+="* Query words with the ontology object Properties\n";
+		matchObjectProperties(queryWords);
 		//match the query stems with the object Properties
-		matchedItems+="query stems with the ontology object Properties\n";
-		int[] qStemOProp = matchobjectProperties(queryStems);
+		matchedItemsString+="* Query stems with the ontology object Properties\n";
+		matchObjectProperties(queryStems);
 		//match the query entities with the object Properties
-		matchedItems+="query entities with the ontology object Properties\n";
-		int[] qEntityOProp = matchobjectProperties(queryEntities);
+		matchedItemsString+="* Query entities with the ontology object Properties\n";
+		matchObjectProperties(queryEntities);
 
 
 
 		//match the query words with the data Properties
-		matchedItems+="query words with the ontology data Properties\n";
-		int[] qWordDProp = matchdataProperties(queryWords);
+		matchedItemsString+="* Query words with the ontology data Properties\n";
+		matchDataProperties(queryWords);
 		//match the query stems with the data Properties
-		matchedItems+="query stems with the ontology data Properties\n";
-		int[] qStemDProp = matchdataProperties(queryStems);
+		matchedItemsString+="* Query stems with the ontology data Properties\n";
+		matchDataProperties(queryStems);
 		//match the query entities with the data Properties
-		matchedItems+="query entities with the ontology data Properties\n";
-		int[] qEntityDProp = matchdataProperties(queryEntities);
+		matchedItemsString+="* Query entities with the ontology data Properties\n";
+		matchDataProperties(queryEntities);
 	}
-	//	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static int[] matchClasses(String [] tokens)
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public static void matchClasses(String [] tokens)
 	{
-		int[] matchIndex = new int[tokens.length];
-		int j=0;
+		//ArrayList<String> matchedItemsWithClasses = new ArrayList<String>();
+		String temp="";
 		for (OWLClass cls : classes)
 		{
 			for(int i=0;i<tokens.length;i++)
 				if(cls.getIRI().getShortForm().equalsIgnoreCase(tokens[i]))
 				{
-					matchIndex[i]=j;
-					matchedItems+=cls.getIRI().getShortForm()+" = "+tokens[i]+"\n";
+					temp = cls.getIRI().getShortForm()+" = "+tokens[i];
+					if(!matchedItems.contains(temp))
+					{
+						matchedItems.add(temp);
+						matchedItemsString+=temp+"\n";
+						//matchedItemsWithClasses.add(temp);
+					}
 				}
-			j++;
 		}
 
-		return matchIndex;
+		//return matchedItemsWithClasses;
+	}
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public static void matchClassesStems(String [] tokens)
+	{
+		//ArrayList<String> matchedItemsWithClasses = new ArrayList<String>();
+		String temp="";
+		EnglishStemmer stemmer = new EnglishStemmer();
+		for (OWLClass cls : classes)
+		{
+			stemmer.setCurrent(cls.getIRI().getShortForm());
+			stemmer.stem();
+			for(int i=0;i<tokens.length;i++)
+				if(stemmer.getCurrent().equalsIgnoreCase(tokens[i]))
+				{
+					temp = cls.getIRI().getShortForm()+" = "+tokens[i];
+					if(!matchedItems.contains(temp))
+					{
+						matchedItems.add(temp);
+						matchedItemsString+=temp+"\n";
+						//matchedItemsWithClasses.add(temp);
+					}
+				}
+		}
+
+		//return matchedItemsWithClasses;
 	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static int[] matchobjectProperties(String [] tokens)
+	public static void matchObjectProperties(String [] tokens)
 	{
-		int[] matchIndex = new int[tokens.length];
-		int j=0;
+		//ArrayList<String> matchedItemsWithObjectProperties = new ArrayList<String>();
+		String temp="";
 		for (OWLObjectProperty op : objectProp)
 		{
 			//System.out.println(objectProperties[j]);
 			for(int i=0;i<tokens.length;i++)
 				if(op.getIRI().getShortForm().equalsIgnoreCase((tokens[i])))
 				{
-					matchIndex[i]=j;
-					matchedItems+=op.getIRI().getShortForm()+" = "+tokens[i]+"\n";
+					temp = op.getIRI().getShortForm()+" = "+tokens[i];
+					if(!matchedItems.contains(temp))
+					{
+						matchedItems.add(temp);
+						matchedItemsString+=temp+"\n";
+						//matchedItemsWithObjectProperties.add(temp);
+					}
 				}
-			j++;
 		}
 
-		return matchIndex;
+		//return matchedItemsWithObjectProperties;
 	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static int[] matchdataProperties(String [] tokens)
+	public static void matchObjectPropertiesStems(String [] tokens)
 	{
-		int[] matchIndex = new int[tokens.length];
-		int j=0;
+		//ArrayList<String> matchedItemsWithObjectProperties = new ArrayList<String>();
+		String temp="";
+		EnglishStemmer stemmer = new EnglishStemmer();
+		for (OWLObjectProperty op : objectProp)
+		{
+			stemmer.setCurrent(op.getIRI().getShortForm());
+			stemmer.stem();
+			for(int i=0;i<tokens.length;i++)
+				if(stemmer.getCurrent().equalsIgnoreCase((tokens[i])))
+				{
+					temp = op.getIRI().getShortForm()+" = "+tokens[i];
+					if(!matchedItems.contains(temp))
+					{
+						matchedItems.add(temp);
+						matchedItemsString+=temp+"\n";
+						//matchedItemsWithObjectProperties.add(temp);
+					}
+				}
+		}
+
+		//return matchedItemsWithObjectProperties;
+	}
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public static void matchDataProperties(String [] tokens)
+	{
+		//ArrayList<String> matchedItemsWithDataProperties = new ArrayList<String>();
+		String temp="";
 		for (OWLDataProperty dp : dataProp)
 		{
 			for(int i=0;i<tokens.length;i++)
 				if(dp.getIRI().getShortForm().equalsIgnoreCase(tokens[i]))
 				{
-					matchIndex[i]=j;
-					matchedItems+=dp.getIRI().getShortForm()+" = "+tokens[i]+"\n";
+					temp = dp.getIRI().getShortForm()+" = "+tokens[i];
+					if(!matchedItems.contains(temp))
+					{
+						matchedItems.add(temp);
+						matchedItemsString+=temp+"\n";
+						//matchedItemsWithDataProperties.add(temp);
+					}
 				}
-			j++;
 		}
 
-		return matchIndex;
+		//return matchedItemsWithDataProperties;
 	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static String getMatchedItems()
+	public static void matchDataPropertiesStems(String [] tokens)
+	{
+		//ArrayList<String> matchedItemsWithDataProperties = new ArrayList<String>();
+		String temp="";
+		EnglishStemmer stemmer = new EnglishStemmer();
+		for (OWLDataProperty dp : dataProp)
+		{
+			stemmer.setCurrent(dp.getIRI().getShortForm());
+			stemmer.stem();
+			for(int i=0;i<tokens.length;i++)
+				if(stemmer.getCurrent().equalsIgnoreCase(tokens[i]))
+				{
+					temp = dp.getIRI().getShortForm()+" = "+tokens[i];
+					if(!matchedItems.contains(temp))
+					{
+						matchedItems.add(temp);
+						matchedItemsString+=temp+"\n";
+						//matchedItemsWithDataProperties.add(temp);
+					}
+				}
+		}
+
+		//return matchedItemsWithDataProperties;
+	}
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public static ArrayList<String> getMatchedItems()
 	{
 		return matchedItems;	
+	}
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public static String getMatchedItemsString()
+	{
+		return matchedItemsString;	
+	}
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public static String getClasses()
+	{
+		String classesStr="";
+		for(OWLClass cls :classes)
+			classesStr+=cls.getIRI().getShortForm()+"\n";
+		return classesStr;	
+	}
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public static String getDataProperties()
+	{
+		String dataPropStr="";
+		for(OWLDataProperty dp :dataProp)
+			dataPropStr+=dp.getIRI().getShortForm()+"\n";
+		return dataPropStr;	
+	}
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public static String getObjectProperties()
+	{
+		String objectPropStr="";
+		for(OWLObjectProperty op :objectProp)
+			objectPropStr+=op.getIRI().getShortForm()+"\n";
+		return objectPropStr;	
 	}
 }

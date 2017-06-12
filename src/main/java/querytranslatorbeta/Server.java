@@ -108,14 +108,17 @@ public class Server {
 		OntologyReader ontReader = new OntologyReader();
 		
 		ontReader.readOntology();
+		sendText(ontReader.getClasses(),s);
+		sendText(ontReader.getObjectProperties(),s);
+		sendText(ontReader.getDataProperties(),s);
 		//matching process
 		ontReader.match(Qwords,Qstems,Qentities);
 		
 		txtAlors.setText(txtAlors.getText()+"\n----------------------------------------");
 		txtAlors.setText(txtAlors.getText()+"\nMatched Items");
-		txtAlors.setText(txtAlors.getText()+ontReader.getMatchedItems());
+		txtAlors.setText(txtAlors.getText()+ontReader.getMatchedItemsString());
 		//User Feedback
-		
+		sendText(ontReader.getMatchedItemsString(),s);
 		
 		//build SPARQL query
 		
