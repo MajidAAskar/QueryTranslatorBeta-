@@ -12,7 +12,8 @@ public class EntityRecognizer
 	{
 		//String serializedClassifier = "classifiers/english.muc.7class.distsim.crf.ser.gz";
 		//String serializedClassifier = "classifiers/english.muc.7class.caseless.distsim.crf.ser.gz";//new one 5.1.2017
-		String serializedClassifier = "classifiers/english.all.3class.distsim.crf.ser.gz";
+		//String serializedClassifier = "classifiers/english.all.3class.distsim.crf.ser.gz";
+		String serializedClassifier = "classifiers/ner-model.ser.gz";
 		AbstractSequenceClassifier<CoreLabel> classifier=null;
 		try
 		{

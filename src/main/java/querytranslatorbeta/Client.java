@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -138,7 +139,20 @@ public class Client extends JFrame {
 
 		JButton btnAdd = new JButton("Add");
 		btnAdd.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				int index = FromOntology.getSelectedIndex();
+				if(index!=-1)
+				{
+					MatchedItemsPanle.add(new JLabel(FromOntology.getSelectedValue()));
+					FromOntology.clearSelection();
+				}
+				MatchedItemsPanle.revalidate();
+				/*MatchedItemsPanle.repaint();
+				scrollPane.revalidate();
+				scrollPane.repaint();
+				//scrollPane
+				validate();*/
 			}
 		});
 		btnAdd.setBounds(335, 180, 89, 23);
