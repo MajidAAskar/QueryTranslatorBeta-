@@ -10,7 +10,7 @@ import javax.swing.JOptionPane;
 
 /**
  *
- * @author lts
+ * @author 
  */
 public class ConnectionMySql {
 
@@ -31,26 +31,25 @@ public class ConnectionMySql {
     	ConnectionMySql s = new ConnectionMySql();
     	 s.connection();
     }*/
-    public  Connection openBDConnection() {
+    public  void openBDConnection() {
         try {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
             System.out.println("driver");
             con = DriverManager.getConnection(fullUrl, uid, pwd);
             System.out.println("Connection created");
             con.setAutoCommit(true);
-            return con;
 
         } catch (ClassNotFoundException | SQLException ex) {
             JOptionPane.showMessageDialog(null, "Error in connection");
             ex.printStackTrace();
-            return null;
+            con = null;
 
         } catch (IllegalAccessException ex) {
             Logger.getLogger(ConnectionMySql.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
             Logger.getLogger(ConnectionMySql.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return null;
+        con = null;
 
     }
 
