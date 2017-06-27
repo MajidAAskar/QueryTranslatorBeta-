@@ -1,6 +1,8 @@
 package querytranslatorbeta;
 
 
+import java.awt.BorderLayout;
+import java.awt.Font;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -47,14 +49,11 @@ public class Server {
 	        try {
 	            while (true) {
 	                Socket socket = listener.accept();
-	                //txtAlors.setText(txtAlors.getText()+"\nNew client");
-//	               JOptionPane.showMessageDialog(null,"New client");
+	                //get the user query
 	                String toCient = window.readText(socket);
 	                
 	                try {
-	                    /*PrintWriter out =
-	                        new PrintWriter(socket.getOutputStream(), true);
-	                    out.println(str);*/
+	                    // return the results (SPARQL query) back to the user
 	                	window.sendText(toCient,socket);
 	                } finally {
 	                    socket.close();
@@ -67,11 +66,7 @@ public class Server {
 	       
 	        
 	}
-
-	
-	
-	
-	
+////////////////////////////////////////////////////////////////////////////////////////
 	private String readText(Socket s) throws IOException, ClassNotFoundException {
 		txtAlors.setText("Waiting for Clients");
 		ObjectInputStream ois;
@@ -101,32 +96,35 @@ public class Server {
 		String [] Qentities = pocessor.getEntities();
 		
 		
-		//for(int i=0;i<words.length;i++)
-			//txtSPARQLQuery.setText(txtSPARQLQuery.getText()+" "+words[i]);
 		
 		//get classes and properties from the ontology
 		OntologyReader ontReader = new OntologyReader();
 		
 		ontReader.readOntology();
 		sendText(ontReader.getClasses(),s);
-		sendText(ontReader.getObjectProperties(),s);
-		sendText(ontReader.getDataProperties(),s);
+		//sendText(ontReader.getObjectProperties(),s);
+		//sendText(ontReader.getDataProperties(),s);
 		//matching process
 		ontReader.match(Qwords,Qstems,Qentities);
 		
 		txtAlors.setText(txtAlors.getText()+"\n----------------------------------------");
 		txtAlors.setText(txtAlors.getText()+"\nMatched Items");
 		txtAlors.setText(txtAlors.getText()+ontReader.getMatchedItemsString());
-		//User Feedback
+		
+		//send items to the client to get user Feedback
 		sendText(ontReader.getMatchedItemsString(),s);
 		
+		//receive the user feedback from the client
+		ois = new ObjectInputStream(s.getInputStream());
+		String clientFeedback = (String) ois.readObject();
+		
 		//build SPARQL query
+		QueryBuilder SPQRQLBuilder = new QueryBuilder(clientFeedback);
 		
-		
-		return java.util.Arrays.toString(Qentities);
+		return SPQRQLBuilder.constructSPARQLQuery();
 		
 	}
-
+////////////////////////////////////////////////////////////////////////////////////////
 	private void sendText(String text, Socket socket) throws IOException {
 		//JOptionPane.showMessageDialog(null,"sending text to client..");
 		OutputStream output = socket.getOutputStream();
@@ -155,12 +153,13 @@ public class Server {
 	 */
 	private void initialize() {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 450, 300);
+		frame.setBounds(100, 100, 600, 645);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.getContentPane().setLayout(null);
+		frame.getContentPane().setLayout(new BorderLayout());
 		frame.setTitle("Processing Interface");
 		
 		txtAlors = new JTextArea();
+		txtAlors.setFont(new Font("Century", Font.BOLD, 16));
 		txtAlors.setText("Waiting for Clients");
 		txtAlors.setBounds(69, 29, 308, 176);
 		

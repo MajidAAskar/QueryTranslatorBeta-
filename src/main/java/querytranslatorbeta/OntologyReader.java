@@ -14,33 +14,38 @@ import org.semanticweb.owlapi.model.OWLDataProperty;
 import org.semanticweb.owlapi.model.OWLDataPropertyDomainAxiom;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLObjectPropertyDomainAxiom;
+import org.semanticweb.owlapi.model.OWLObjectPropertyRangeAxiom;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.tartarus.snowball.ext.EnglishStemmer;
 
 public class OntologyReader 
 {
-	private static Set<OWLClass> classes;
-	private static Set<OWLObjectProperty> objectProp;
-	private static Set<OWLDataProperty> dataProp;
-	private static ArrayList<String> matchedItems;
-	private static String matchedItemsString;
+	private Set<OWLClass> classes;
+	private Set<OWLObjectProperty> objectProp;
+	private Set<OWLDataProperty> dataProp;
+	private ArrayList<String> matchedItems;
+	private String matchedItemsString="";
+	private String matchedItemsStringToSend="";
 
 
 	public static void main(String []args) 
 	{
-		readOntology();
+		new OntologyReader().readOntology();
 		//match();
 
 	}
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static void readOntology()
+	public void readOntology()
 	{
 
 		File file = new File("Ontologies/oboe-core.owl");
 		//File file = new File("D:/Drive g/Germany/Germany  4-7 2017/oboe-core.owl");
 		OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
 		OWLOntology ontology;
+
+		ConnectionMySql dbcon = new ConnectionMySql();
+
 
 		try {
 			ontology = manager.loadOntologyFromOntologyDocument(file);
@@ -54,7 +59,7 @@ public class OntologyReader
 			ArrayList<String>[] objectProperties;
 			ArrayList<String>[] dataProperties;
 			//Set<OWLNamedIndividual> individuals;
-
+			
 			classes = ontology.getClassesInSignature();
 			objectProp = ontology.getObjectPropertiesInSignature();
 			dataProp = ontology.getDataPropertiesInSignature();
@@ -63,27 +68,46 @@ public class OntologyReader
 
 			objectProperties = new ArrayList[classes.size()];
 			dataProperties = new ArrayList[classes.size()];
-			int i=-1,j=-1;
+			int i=-1,j=-1; 
+			
 
 			System.out.println("Classes"+objectProperties.length);
 			System.out.println("--------------------------------");
 			for (OWLClass cls : classes) {
 				System.out.println("+: " + cls.getIRI().getShortForm());
 
+				
+				dbcon.openBDConnection();
+				dbcon.executeStoredProc("InsertClasses",cls.getIRI().getShortForm(),cls.getIRI().toQuotedString(),"0");
+				
 				objectProperties[++i] = new ArrayList<String>();
 				System.out.println(" \tObject Property Domain");
 				for (OWLObjectPropertyDomainAxiom op : ontology.getAxioms(AxiomType.OBJECT_PROPERTY_DOMAIN)) {
 
-					if (op.getDomain().equals(cls)) {   
-						for(OWLObjectProperty oop : op.getObjectPropertiesInSignature()){
-
-							objectProperties[i].add(oop.getIRI().getShortForm());
-							System.out.println("\t\t +: " + oop.getIRI().getShortForm());
+					if (op.getDomain().equals(cls)) 
+					{   
+						for(OWLObjectProperty oop : op.getObjectPropertiesInSignature())
+						{
+							//System.out.println(" \tObject Property Range");
+							for (OWLObjectPropertyRangeAxiom Rop : ontology.getAxioms(AxiomType.OBJECT_PROPERTY_RANGE)) 
+							{
+									for(OWLObjectProperty Roop : Rop.getObjectPropertiesInSignature())
+									{
+										if(Roop.equals(oop))
+										{
+											objectProperties[i].add(oop.getIRI().getShortForm());
+											System.out.println("\t\t +: " + oop.getIRI().getShortForm());
+											dbcon.executeStoredProc("InsertObjectProperties",oop.getIRI().getShortForm(),oop.getIRI().toQuotedString(),
+													cls.getIRI().getShortForm(),((OWLClass)Rop.getRange()).getIRI().getShortForm());
+										}
+									}
+							
 						}
 						//System.out.println("\t\t +: " + op.getProperty().getNamedProperty().getIRI().getShortForm());
 					}
 				}
 
+				}
 				System.out.println(" \tData Property Domain");
 				dataProperties[++j] = new ArrayList<String>();
 				for (OWLDataPropertyDomainAxiom dp : ontology.getAxioms(AxiomType.DATA_PROPERTY_DOMAIN)) {
@@ -93,11 +117,12 @@ public class OntologyReader
 
 							dataProperties[j].add(odp.getIRI().getShortForm());
 							System.out.println("\t\t +: " + odp.getIRI().getShortForm());
+							dbcon.executeStoredProc("InsertDataProperties",cls.getIRI().getShortForm(),odp.getIRI().getShortForm(),odp.getIRI().toQuotedString());
 						}
 						//System.out.println("\t\t +:" + dp.getProperty());
 					}
 				}
-
+				
 			}
 
 		} catch (Exception ex) {
@@ -105,9 +130,10 @@ public class OntologyReader
 			ex.printStackTrace();
 			//Logger.getLogger(OntologyAPI.class.getName()).log(Level.SEVERE, null, ex);
 		}
+		dbcon.closeBDConnection();
 	}
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static void match(String [] queryWords,String [] queryStems,String [] queryEntities)
+	public void match(String [] queryWords,String [] queryStems,String [] queryEntities)
 	{
 		matchedItems= new ArrayList<String>();
 		matchedItemsString="";
@@ -150,7 +176,7 @@ public class OntologyReader
 		matchDataProperties(queryEntities);
 	}
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static void matchClasses(String [] tokens)
+	public void matchClasses(String [] tokens)
 	{
 		//ArrayList<String> matchedItemsWithClasses = new ArrayList<String>();
 		String temp="";
@@ -164,6 +190,7 @@ public class OntologyReader
 					{
 						matchedItems.add(temp);
 						matchedItemsString+=temp+"\n";
+						matchedItemsStringToSend+=temp+"\n";
 						//matchedItemsWithClasses.add(temp);
 					}
 				}
@@ -172,7 +199,7 @@ public class OntologyReader
 		//return matchedItemsWithClasses;
 	}
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static void matchClassesStems(String [] tokens)
+	public void matchClassesStems(String [] tokens)
 	{
 		//ArrayList<String> matchedItemsWithClasses = new ArrayList<String>();
 		String temp="";
@@ -189,6 +216,7 @@ public class OntologyReader
 					{
 						matchedItems.add(temp);
 						matchedItemsString+=temp+"\n";
+						matchedItemsStringToSend+=temp+"\n";
 						//matchedItemsWithClasses.add(temp);
 					}
 				}
@@ -197,7 +225,7 @@ public class OntologyReader
 		//return matchedItemsWithClasses;
 	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static void matchObjectProperties(String [] tokens)
+	public void matchObjectProperties(String [] tokens)
 	{
 		//ArrayList<String> matchedItemsWithObjectProperties = new ArrayList<String>();
 		String temp="";
@@ -212,6 +240,7 @@ public class OntologyReader
 					{
 						matchedItems.add(temp);
 						matchedItemsString+=temp+"\n";
+						matchedItemsStringToSend+=temp+"\n";
 						//matchedItemsWithObjectProperties.add(temp);
 					}
 				}
@@ -220,7 +249,7 @@ public class OntologyReader
 		//return matchedItemsWithObjectProperties;
 	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static void matchObjectPropertiesStems(String [] tokens)
+	public void matchObjectPropertiesStems(String [] tokens)
 	{
 		//ArrayList<String> matchedItemsWithObjectProperties = new ArrayList<String>();
 		String temp="";
@@ -237,6 +266,7 @@ public class OntologyReader
 					{
 						matchedItems.add(temp);
 						matchedItemsString+=temp+"\n";
+						matchedItemsStringToSend+=temp+"\n";
 						//matchedItemsWithObjectProperties.add(temp);
 					}
 				}
@@ -245,7 +275,7 @@ public class OntologyReader
 		//return matchedItemsWithObjectProperties;
 	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static void matchDataProperties(String [] tokens)
+	public void matchDataProperties(String [] tokens)
 	{
 		//ArrayList<String> matchedItemsWithDataProperties = new ArrayList<String>();
 		String temp="";
@@ -259,6 +289,7 @@ public class OntologyReader
 					{
 						matchedItems.add(temp);
 						matchedItemsString+=temp+"\n";
+						matchedItemsStringToSend+=temp+"\n";
 						//matchedItemsWithDataProperties.add(temp);
 					}
 				}
@@ -267,7 +298,7 @@ public class OntologyReader
 		//return matchedItemsWithDataProperties;
 	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static void matchDataPropertiesStems(String [] tokens)
+	public void matchDataPropertiesStems(String [] tokens)
 	{
 		//ArrayList<String> matchedItemsWithDataProperties = new ArrayList<String>();
 		String temp="";
@@ -284,6 +315,7 @@ public class OntologyReader
 					{
 						matchedItems.add(temp);
 						matchedItemsString+=temp+"\n";
+						matchedItemsStringToSend+=temp+"\n";
 						//matchedItemsWithDataProperties.add(temp);
 					}
 				}
@@ -292,17 +324,17 @@ public class OntologyReader
 		//return matchedItemsWithDataProperties;
 	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static ArrayList<String> getMatchedItems()
+	public ArrayList<String> getMatchedItems()
 	{
 		return matchedItems;	
 	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static String getMatchedItemsString()
+	public String getMatchedItemsString()
 	{
-		return matchedItemsString;	
+		return matchedItemsStringToSend;	
 	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static String getClasses()
+	public String getClasses()
 	{
 		String classesStr="";
 		for(OWLClass cls :classes)
@@ -310,7 +342,7 @@ public class OntologyReader
 		return classesStr;	
 	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static String getDataProperties()
+	public String getDataProperties()
 	{
 		String dataPropStr="";
 		for(OWLDataProperty dp :dataProp)
@@ -318,7 +350,7 @@ public class OntologyReader
 		return dataPropStr;	
 	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static String getObjectProperties()
+	public String getObjectProperties()
 	{
 		String objectPropStr="";
 		for(OWLObjectProperty op :objectProp)

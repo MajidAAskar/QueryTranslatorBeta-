@@ -4,16 +4,19 @@
   <artifactId>querytranslatorbeta</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <dependencies>
+  <!-- https://mvnrepository.com/artifact/edu.stanford.nlp/stanford-corenlp -->
   	<dependency>
     	<groupId>edu.stanford.nlp</groupId>
     	<artifactId>stanford-corenlp</artifactId>
     	<version>3.7.0</version>
 	</dependency>
+	<!-- https://mvnrepository.com/artifact/edu.stanford.nlp/stanford-parser -->
   	<dependency>
     	<groupId>edu.stanford.nlp</groupId>
     	<artifactId>stanford-parser</artifactId>
     	<version>3.7.0</version>
 	</dependency>
+	<!-- https://mvnrepository.com/artifact/com.github.rholder/snowball-stemmer -->
 	<dependency>
     	<groupId>com.github.rholder</groupId>
     	<artifactId>snowball-stemmer</artifactId>
