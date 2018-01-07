@@ -31,6 +31,7 @@ import java.awt.GridLayout;
 import javax.swing.JList;
 import javax.swing.JTextArea;
 import java.awt.Font;
+import javax.swing.JFileChooser;
 
 public class Client extends JFrame {
 
@@ -42,7 +43,8 @@ public class Client extends JFrame {
 	private ArrayList<JCheckBox> userfeedbackCheck;
 	private JList<String> FromOntology;
 	private DefaultListModel<String> model = new DefaultListModel<String>();
-	private boolean atLeastOneItemIsCkecked = false;
+	private JCheckBox chckbxReadUpdate;
+	//private boolean atLeastOneItemIsCkecked = false;
 	private Socket s;
 	private JScrollPane scrollPane_1;
 	private int startOfObjectPropertiy;
@@ -95,7 +97,7 @@ public class Client extends JFrame {
 		
 		JButton btnTranslate = new JButton("Translate");
 		btnTranslate.setFont(new Font("Tahoma", Font.PLAIN, 16));
-		btnTranslate.setBounds(444, 11, 115, 35);
+		btnTranslate.setBounds(444, 11, 130, 35);
 		btnTranslate.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
@@ -113,7 +115,11 @@ public class Client extends JFrame {
 					s = new Socket("Localhost", 6000);
 					//send the text to the client
 					sendText(txtNlQuery.getText(), s);
-
+					
+					if(chckbxReadUpdate.isSelected())
+						sendText("true", s);
+					else
+						sendText("false", s);
 					//get the matched items to have the user feedback on them
 					//readText(s)
 					//fill the FromOntology List
@@ -142,7 +148,7 @@ public class Client extends JFrame {
 				}
 				catch(Exception ex)
 				{
-
+					JOptionPane.showMessageDialog(null,ex.getMessage(),"From client to server",1);
 				}
 			}
 		});
@@ -151,7 +157,7 @@ public class Client extends JFrame {
 		scrollPane = new JScrollPane();
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		scrollPane.setBounds(325, 82, 209, 151);
+		scrollPane.setBounds(324, 98, 209, 151);
 		getContentPane().add(scrollPane);
 
 		MatchedItemsPanle = new JPanel();
@@ -168,7 +174,7 @@ public class Client extends JFrame {
 				int index = FromOntology.getSelectedIndex();
 				if(index!=-1)
 				{
-					atLeastOneItemIsCkecked = true;
+					//atLeastOneItemIsCkecked = true;
 					userfeedbackCheck.add(new JCheckBox(FromOntology.getSelectedValue()));
 					userfeedbackCheck.get(userfeedbackCheck.size()-1).setSelected(true);
 					MatchedItemsPanle.add(userfeedbackCheck.get(userfeedbackCheck.size()-1));
@@ -192,11 +198,6 @@ public class Client extends JFrame {
 		{
 			public void actionPerformed(ActionEvent arg0) 
 			{
-				if(! atLeastOneItemIsCkecked)
-				{
-					JOptionPane.showMessageDialog(null, "No items are selected, pleast select at least one");
-					return;
-				}
 				String feedbackSelectedItems="";
 				if(matchCheck!=null)
 					for(int i=0;i<matchCheck.length;i++)
@@ -204,14 +205,20 @@ public class Client extends JFrame {
 						if(matchCheck[i].isSelected())
 							feedbackSelectedItems+=matchCheck[i].getText().substring(matchCheck[i].getText().indexOf('=')+2)+" ";
 					}
+				
+				if(feedbackSelectedItems.equals(""))
+				{
+					JOptionPane.showMessageDialog(null, "No items are selected, pleast select at least one","Client select items",1);
+					return;
+				}
 
 				for(int i=0;i<userfeedbackCheck.size();i++)
 				{
 					if(userfeedbackCheck.get(i).isSelected())
 						feedbackSelectedItems+=userfeedbackCheck.get(i).getText()+" ";
 				}
-//JOptionPane.showMessageDialog(null, feedbackSelectedItems);
-				atLeastOneItemIsCkecked = false;
+				JOptionPane.showMessageDialog(null, feedbackSelectedItems,"Client select items",1);
+				//atLeastOneItemIsCkecked = false;
 				sendText(feedbackSelectedItems,s);
 				//finally present the SPARQL query
 				txtSparqlQuery.setText(readText(s));
@@ -219,13 +226,36 @@ public class Client extends JFrame {
 		});
 
 		scrollPane_1 = new JScrollPane();
-		scrollPane_1.setBounds(28, 82, 179, 151);
+		scrollPane_1.setBounds(28, 98, 179, 151);
 		getContentPane().add(scrollPane_1);
 
 		FromOntology = new JList<String>(model);
 		scrollPane_1.setViewportView(FromOntology);
-		btnSubmitFeedback.setBounds(176, 244, 165, 34);
+		btnSubmitFeedback.setBounds(176, 253, 165, 34);
 		getContentPane().add(btnSubmitFeedback);
+		
+		chckbxReadUpdate = new JCheckBox("Read / Update Ontology");
+		chckbxReadUpdate.setFont(new Font("Tahoma", Font.PLAIN, 16));
+		chckbxReadUpdate.setBounds(28, 52, 226, 23);
+		getContentPane().add(chckbxReadUpdate);
+		
+		JButton btnTranslateFile = new JButton("Translate File");
+		btnTranslateFile.addActionListener(new ActionListener() 
+		{
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				//open the file containing the queries to be executed
+				JFileChooser  openQueryFile = new JFileChooser();
+				int response = openQueryFile.showOpenDialog(null);
+				if(response!=0)
+				{
+					//Start reading the file.
+				}
+			}
+		});
+		btnTranslateFile.setFont(new Font("Tahoma", Font.PLAIN, 16));
+		btnTranslateFile.setBounds(444, 52, 130, 35);
+		getContentPane().add(btnTranslateFile);
 		
 		//scrollPane.add(MatchedItemsPanle);
 	}
@@ -242,7 +272,7 @@ public class Client extends JFrame {
 		}
 		catch(IOException | ClassNotFoundException e)
 		{
-			JOptionPane.showMessageDialog(null, "Can not read from the socket");
+			JOptionPane.showMessageDialog(null, "Can not read from the socket","From client to server",1);
 		}
 
 		return inputMessage;
@@ -250,18 +280,23 @@ public class Client extends JFrame {
 	///////**********************************************************************************
 	private static void sendText(String text, Socket socket)  
 	{
-		JOptionPane.showMessageDialog(null,"sending text to server..");
+		JOptionPane.showMessageDialog(null,"sending text to server..","Client send text",1);
+		OutputStream output;
+		ObjectOutputStream oos;
 		try
 		{
-			OutputStream output = socket.getOutputStream();
-
-			ObjectOutputStream oos = new ObjectOutputStream(output);
+			output = socket.getOutputStream();
+			oos = new ObjectOutputStream(output);
+			
 			oos.writeObject(text);
 			oos.flush();
+			output.flush();
+			//output.close();
+			//oos.close();
 		}
 		catch(IOException e)
 		{
-			JOptionPane.showMessageDialog(null, "Can not write to the socket");
+			JOptionPane.showMessageDialog(null, "Can not write to the socket"+text,"From client to server",1);
 		}
 	}
 	///////**********************************************************************************
@@ -279,14 +314,15 @@ public class Client extends JFrame {
 		for(int i=0;i<items.size();i++)
 		{
 			matchCheck[i] = new JCheckBox(items.get(i));
-			matchCheck[i].addActionListener(new ActionListener() 
+			matchCheck[i].setSelected(true);
+			/*matchCheck[i].addActionListener(new ActionListener() 
 			{
 				public void actionPerformed(ActionEvent arg0) 
 				{
 					if(((JCheckBox)arg0.getSource()).isSelected())
 						atLeastOneItemIsCkecked = true;
 				}
-			});
+			});*/
 			this.MatchedItemsPanle.add(matchCheck[i]);
 		}
 		this.MatchedItemsPanle.revalidate();
@@ -306,14 +342,15 @@ public class Client extends JFrame {
 			for(int i=0;i<itemsArr.length;i++)
 			{
 				matchCheck[i] = new JCheckBox(itemsArr[i]);
-				matchCheck[i].addActionListener(new ActionListener() 
+				matchCheck[i].setSelected(true);
+				/*matchCheck[i].addActionListener(new ActionListener() 
 				{
 					public void actionPerformed(ActionEvent arg0) 
 					{
 						if(((JCheckBox)arg0.getSource()).isSelected())
 							atLeastOneItemIsCkecked = true;
 					}
-				});
+				});*/
 				this.MatchedItemsPanle.add(matchCheck[i]);
 			}
 			this.MatchedItemsPanle.revalidate();

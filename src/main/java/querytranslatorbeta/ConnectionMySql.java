@@ -43,15 +43,15 @@ public class ConnectionMySql {
 			con.setAutoCommit(true);
 
 		} catch (ClassNotFoundException | SQLException ex) {
-			JOptionPane.showMessageDialog(null, "Error in connection");
+			JOptionPane.showMessageDialog(null,ex.getMessage() ,"Error in connection",1);
 			ex.printStackTrace();
 			con = null;
 
 		} catch (IllegalAccessException ex) {
-			JOptionPane.showMessageDialog(null, "Error in connection IllegalAccessException");
+			JOptionPane.showMessageDialog(null,ex.getMessage() ,"Error in connection IllegalAccessException",1);
 			// Logger.getLogger(ConnectionMySql.class.getName()).log(Level.SEVERE, null, ex);
 		} catch (InstantiationException ex) {
-			JOptionPane.showMessageDialog(null, "Error in connection InstantiationException");
+			JOptionPane.showMessageDialog(null, ex.getMessage(),"Error in connection InstantiationException",1);
 			//Logger.getLogger(ConnectionMySql.class.getName()).log(Level.SEVERE, null, ex);
 		}
 		//con = null;
@@ -79,7 +79,7 @@ public class ConnectionMySql {
 		} 
 		catch (SQLException se)
 		{
-			JOptionPane.showMessageDialog(null, "Error in Stored Proc "+ procName+ " "+ query +se.getMessage());
+			JOptionPane.showMessageDialog(null, "Stored Proc name "+ procName+ " "+ query +se.getMessage(),"Error in Stored Proc ",1);
 			// log exception
 
 		}
@@ -103,12 +103,32 @@ public class ConnectionMySql {
 		} 
 		catch (SQLException se)
 		{
-			JOptionPane.showMessageDialog(null, "Error in Stored Proc "+ procName+se.getMessage());
+			JOptionPane.showMessageDialog(null, "Stored Proc name "+ procName+se.getMessage(),"Error in Stored Proc ",1);
 			// log exception
 
 		}
 	}
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	public ResultSet executeStoredProc( String procName)
+	{
+		String query = "call "+ procName;
+		ResultSet RS=null;
+		try {
+			// set all the preparedstatement parameters
+			PreparedStatement st = con.prepareStatement(query);
+
+			// execute the preparedstatement insert
+			RS = st.executeQuery();
+			//st.close();
+		} 
+		catch (SQLException se)
+		{
+			JOptionPane.showMessageDialog(null, "Stored Proc name "+ procName+se.getMessage(),"Error in Stored Proc ",1);
+			// log exception
+
+		}
+		return RS;
+	}
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
 	public ResultSet executeStoredProc( String procName,String s1)
 	{
@@ -126,7 +146,7 @@ public class ConnectionMySql {
 		} 
 		catch (SQLException se)
 		{
-			JOptionPane.showMessageDialog(null, "Error in Stored Proc "+ procName+se.getMessage());
+			JOptionPane.showMessageDialog(null, "Stored Proc name "+ procName+se.getMessage(),"Error in Stored Proc ",1);
 			// log exception
 
 		}
